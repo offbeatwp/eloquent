@@ -1,0 +1,19 @@
+{
+    "name": "offbeatwp/eloquent",
+    "type": "offbeatwp-service",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "OffbeatWP\\Eloquent\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Chris Schrijver",
+            "email": "chris@raow.nl"
+        }
+    ],
+    "require": {
+        "illuminate/database": "^8.55"
+    }
+}
