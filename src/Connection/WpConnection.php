@@ -2,6 +2,7 @@
 
 namespace OffbeatWP\Eloquent\Connection;
 
+use Generator;
 use Illuminate\Database\MySqlConnection;
 
 class WpConnection extends MySqlConnection
@@ -53,13 +54,13 @@ class WpConnection extends MySqlConnection
      * @param  string  $query
      * @param  array  $bindings
      * @param  bool  $useReadPdo
-     * @return \Generator
+     * @return Generator
      */
-    public function cursor($query, $bindings = [], $useReadPdo = true)
+    public function cursor($query, $bindings = [], $useReadPdo = true): Generator
     {
         $results = $this->select($query, $bindings, $useReadPdo);
 
-        if(!empty($results)) {
+        if($results) {
             foreach($results as $result) {
                 yield $result;
             }
@@ -117,15 +118,17 @@ class WpConnection extends MySqlConnection
                 return true;
             }
 
-            return (bool) $this->exec($query);
+            return (bool)$this->exec($query);
         });
     }
 
-    public function getResults($query) {
+    public function getResults($query)
+    {
         return $this->getWpdb()->get_results($query);
     }
 
-    public function exec($query) {
+    public function exec($query)
+    {
         return $this->getWpdb()->query($query);
     }
 
@@ -135,7 +138,7 @@ class WpConnection extends MySqlConnection
      */
     public function applyBindings(string $query, array $bindings) : string
     {
-        if (empty($bindings)) {
+        if (!$bindings) {
             return $query;
         }
 
@@ -158,7 +161,9 @@ class WpConnection extends MySqlConnection
 
             if (is_int($value)) {
                 return '%d';
-            } elseif (is_float($value)) {
+            }
+
+            if (is_float($value)) {
                 return '%f';
             }
 
@@ -167,6 +172,4 @@ class WpConnection extends MySqlConnection
 
         return $this->getWpdb()->prepare($wpQuery, $wpBindings);
     }
-
-
 }
