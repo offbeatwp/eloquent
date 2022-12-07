@@ -1,4 +1,5 @@
 <?php
+
 namespace OffbeatWP\Eloquent;
 
 use Exception;
@@ -8,6 +9,7 @@ use OffbeatWP\Eloquent\Connection\WpConnection;
 class EloquentManager
 {
     public $booted = false;
+    private $connection;
 
     public function boot()
     {
@@ -16,16 +18,22 @@ class EloquentManager
         // Wordpress already makes an connection to the mysql database. This connection
         // utilizes the wpdb object to make the queries to the database/
         $capsule->addConnection([], 'wp');
+        $this->connection = new WpConnection();
         $capsule->getDatabaseManager()->extend('wp', function () {
-            return new WpConnection();
+            return $this->connection;
         });
 
         $capsule->getDatabaseManager()->setDefaultConnection('wp');
 
-        $capsule->setAsGlobal(); 
-        $capsule->bootEloquent();   
-        
+        $capsule->setAsGlobal();
+        $capsule->bootEloquent();
+
         $this->booted = true;
+    }
+
+    public function getConnection(): WpConnection
+    {
+        return $this->connection;
     }
 
     public function __call($method, $arguments)
@@ -36,8 +44,7 @@ class EloquentManager
 
         }
 
-        trigger_error('Call to undefined method '.__CLASS__.'::'.$method.'()', E_USER_ERROR);
-
+        trigger_error('Call to undefined method ' . __CLASS__ . '::' . $method . '()', E_USER_ERROR);
     }
 
     public static function __callStatic($method, $arguments)
@@ -48,8 +55,7 @@ class EloquentManager
 
         }
 
-        trigger_error('Call to undefined method '.__CLASS__.'::'.$method.'()', E_USER_ERROR);
-
+        trigger_error('Call to undefined method ' . __CLASS__ . '::' . $method . '()', E_USER_ERROR);
     }
 
     public static function callCapsuleMethod($method, $arguments)
@@ -60,12 +66,12 @@ class EloquentManager
 
         if (is_callable(Capsule::class, $method)) {
             return call_user_func_array([Capsule::class, $method], $arguments);
-        } else {
-            throw new Exception('No Capsule method');
         }
+
+        throw new Exception('No Capsule method');
     }
 
-    public function isBooted()
+    public function isBooted(): bool
     {
         return $this->booted;
     }
