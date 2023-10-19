@@ -7,47 +7,56 @@ use PDOException;
 
 class WpPdo extends PDO
 {
+    /** @var WpConnection */
     protected $wpConnection;
+    /** @var bool */
     protected $in_transaction;
 
+    /** @param WpConnection $wpConnection */
     public function __construct($wpConnection)
     {
         $this->wpConnection = $wpConnection;
     }
 
-    public function beginTransaction () {
-        if($this->in_transaction){
-            throw new PDOException("Failed to start transaction. Transaction is already started.");
+    public function beginTransaction()
+    {
+        if ($this->in_transaction) {
+            throw new PDOException('Failed to start transaction. Transaction is already started.');
         }
-        $this->in_transaction=true;
+        $this->in_transaction = true;
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
-    public function commit () {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to commit");
+    public function commit()
+    {
+        if (!$this->in_transaction) {
+            throw new PDOException('There is no active transaction to commit');
         }
-        $this->in_transaction=false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('COMMIT');
     }
 
-    public function rollBack () {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to rollback");
+    public function rollBack()
+    {
+        if (!$this->in_transaction) {
+            throw new PDOException('There is no active transaction to rollback');
         }
-        $this->in_transaction=false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
-    public function inTransaction () {
+    public function inTransaction()
+    {
         return $this->in_transaction;
     }
 
-    public function exec ($statement) {
+    public function exec($statement)
+    {
         return $this->wpConnection->unprepared($statement);
     }
 
-    public function lastInsertId($name=null)
+    /** @inheritDoc */
+    public function lastInsertId($name = null)
     {
         return $this->wpConnection->getWpdb()->insert_id;
     }

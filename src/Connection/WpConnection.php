@@ -2,6 +2,7 @@
 
 namespace OffbeatWP\Eloquent\Connection;
 
+use Generator;
 use Illuminate\Database\MySqlConnection;
 
 class WpConnection extends MySqlConnection
@@ -17,7 +18,7 @@ class WpConnection extends MySqlConnection
         parent::__construct(
             new WpPdo($this),
             DB_NAME ?? null,
-            $wpdb->prefix
+            $wpdb::get_blog_prefix()
         );
     }
 
@@ -29,9 +30,9 @@ class WpConnection extends MySqlConnection
     /**
      * Run a select statement against the database.
      *
-     * @param  string  $query
-     * @param  array  $bindings
-     * @param  bool  $useReadPdo
+     * @param string $query
+     * @param array $bindings
+     * @param bool $useReadPdo
      * @return array
      */
     public function select($query, $bindings = [], $useReadPdo = true)
@@ -50,27 +51,25 @@ class WpConnection extends MySqlConnection
     /**
      * Run a select statement against the database and returns a generator.
      *
-     * @param  string  $query
-     * @param  array  $bindings
-     * @param  bool  $useReadPdo
-     * @return \Generator
+     * @param string $query
+     * @param array $bindings
+     * @param bool $useReadPdo
+     * @return Generator
      */
     public function cursor($query, $bindings = [], $useReadPdo = true)
     {
         $results = $this->select($query, $bindings, $useReadPdo);
 
-        if(!empty($results)) {
-            foreach($results as $result) {
-                yield $result;
-            }
+        foreach ($results as $result) {
+            yield $result;
         }
     }
 
     /**
      * Execute an SQL statement and return the boolean result.
      *
-     * @param  string  $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return bool
      */
     public function statement($query, $bindings = [])
@@ -89,8 +88,8 @@ class WpConnection extends MySqlConnection
     /**
      * Run an SQL statement and get the number of rows affected.
      *
-     * @param  string  $query
-     * @param  array  $bindings
+     * @param string $query
+     * @param array $bindings
      * @return int
      */
     public function affectingStatement($query, $bindings = [])
@@ -107,7 +106,7 @@ class WpConnection extends MySqlConnection
     /**
      * Run a raw, unprepared query against the PDO connection.
      *
-     * @param  string  $query
+     * @param string $query
      * @return bool
      */
     public function unprepared($query)
@@ -117,25 +116,26 @@ class WpConnection extends MySqlConnection
                 return true;
             }
 
-            return (bool) $this->exec($query);
+            return (bool)$this->exec($query);
         });
     }
 
-    public function getResults($query) {
+    public function getResults($query)
+    {
         return $this->getWpdb()->get_results($query);
     }
 
-    public function exec($query) {
+    public function exec($query)
+    {
         return $this->getWpdb()->query($query);
     }
-
 
     /**
      * Bind values to their parameters in the given query.
      */
-    public function applyBindings(string $query, array $bindings) : string
+    public function applyBindings(string $query, array $bindings): string
     {
-        if (empty($bindings)) {
+        if (!$bindings) {
             return $query;
         }
 
@@ -158,7 +158,9 @@ class WpConnection extends MySqlConnection
 
             if (is_int($value)) {
                 return '%d';
-            } elseif (is_float($value)) {
+            }
+
+            if (is_float($value)) {
                 return '%f';
             }
 
@@ -167,6 +169,4 @@ class WpConnection extends MySqlConnection
 
         return $this->getWpdb()->prepare($wpQuery, $wpBindings);
     }
-
-
 }
