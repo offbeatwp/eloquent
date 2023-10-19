@@ -18,7 +18,7 @@ class WpConnection extends MySqlConnection
         parent::__construct(
             new WpPdo($this),
             DB_NAME ?? null,
-            $wpdb::get_blog_prefix()
+            $wpdb->get_blog_prefix()
         );
     }
 
