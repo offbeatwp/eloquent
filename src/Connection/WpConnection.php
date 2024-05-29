@@ -3,10 +3,11 @@
 namespace OffbeatWP\Eloquent\Connection;
 
 use Illuminate\Database\MySqlConnection;
+use wpdb;
 
-class WpConnection extends MySqlConnection
+final class WpConnection extends MySqlConnection
 {
-    private $wpdb;
+    private wpdb $wpdb;
 
     public function __construct()
     {
@@ -21,7 +22,7 @@ class WpConnection extends MySqlConnection
         );
     }
 
-    public function getWpdb()
+    public function getWpdb(): wpdb
     {
         return $this->wpdb;
     }
@@ -36,7 +37,7 @@ class WpConnection extends MySqlConnection
      */
     public function select($query, $bindings = [], $useReadPdo = true)
     {
-        return $this->run($query, $bindings, function ($query, $bindings) use ($useReadPdo) {
+        return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
                 return [];
             }
@@ -59,10 +60,8 @@ class WpConnection extends MySqlConnection
     {
         $results = $this->select($query, $bindings, $useReadPdo);
 
-        if(!empty($results)) {
-            foreach($results as $result) {
-                yield $result;
-            }
+        foreach($results as $result) {
+            yield $result;
         }
     }
 
@@ -129,13 +128,10 @@ class WpConnection extends MySqlConnection
         return $this->getWpdb()->query($query);
     }
 
-
-    /**
-     * Bind values to their parameters in the given query.
-     */
+    /** Bind values to their parameters in the given query. */
     public function applyBindings(string $query, array $bindings) : string
     {
-        if (empty($bindings)) {
+        if (!$bindings) {
             return $query;
         }
 
@@ -145,7 +141,7 @@ class WpConnection extends MySqlConnection
 
         $bindingIndex = 0;
         $wpQuery = preg_replace_callback('/\?|:[a-zA-Z0-9_-]+/', function ($match) use ($bindings, &$bindingIndex, &$wpBindings) {
-            if (preg_match('/^:/', $match[0])) {
+            if (str_starts_with($match[0], ':')) {
                 $bindingKey = str_replace(':', '', $match[0]);
             } else {
                 $bindingKey = $bindingIndex;
@@ -158,7 +154,9 @@ class WpConnection extends MySqlConnection
 
             if (is_int($value)) {
                 return '%d';
-            } elseif (is_float($value)) {
+            }
+
+            if (is_float($value)) {
                 return '%f';
             }
 
@@ -167,6 +165,4 @@ class WpConnection extends MySqlConnection
 
         return $this->getWpdb()->prepare($wpQuery, $wpBindings);
     }
-
-
 }

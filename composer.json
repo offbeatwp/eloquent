@@ -14,6 +14,10 @@
         }
     ],
     "require": {
-        "illuminate/database": "^8.55"
+        "php": ">=8",
+        "illuminate/database": "^v9.52.16"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
     }
 }
