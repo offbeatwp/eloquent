@@ -2,11 +2,13 @@
 
 namespace OffbeatWP\Eloquent\Connection;
 
+use Generator;
 use Illuminate\Database\MySqlConnection;
+use wpdb;
 
 class WpConnection extends MySqlConnection
 {
-    private $wpdb;
+    private wpdb $wpdb;
 
     public function __construct()
     {
@@ -34,7 +36,7 @@ class WpConnection extends MySqlConnection
      * @param  bool  $useReadPdo
      * @return array
      */
-    public function select($query, $bindings = [], $useReadPdo = true)
+    public function select($query, $bindings = [], $useReadPdo = true): array
     {
         return $this->run($query, $bindings, function ($query, $bindings) use ($useReadPdo) {
             if ($this->pretending()) {
@@ -53,9 +55,9 @@ class WpConnection extends MySqlConnection
      * @param  string  $query
      * @param  array  $bindings
      * @param  bool  $useReadPdo
-     * @return \Generator
+     * @return Generator
      */
-    public function cursor($query, $bindings = [], $useReadPdo = true)
+    public function cursor($query, $bindings = [], $useReadPdo = true): Generator
     {
         $results = $this->select($query, $bindings, $useReadPdo);
 
@@ -73,7 +75,7 @@ class WpConnection extends MySqlConnection
      * @param  array  $bindings
      * @return bool
      */
-    public function statement($query, $bindings = [])
+    public function statement($query, $bindings = []): bool
     {
         return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
@@ -93,7 +95,7 @@ class WpConnection extends MySqlConnection
      * @param  array  $bindings
      * @return int
      */
-    public function affectingStatement($query, $bindings = [])
+    public function affectingStatement($query, $bindings = []): int
     {
         return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
@@ -110,7 +112,7 @@ class WpConnection extends MySqlConnection
      * @param  string  $query
      * @return bool
      */
-    public function unprepared($query)
+    public function unprepared($query): bool
     {
         return $this->run($query, [], function ($query) {
             if ($this->pretending()) {
@@ -128,7 +130,6 @@ class WpConnection extends MySqlConnection
     public function exec($query) {
         return $this->getWpdb()->query($query);
     }
-
 
     /**
      * Bind values to their parameters in the given query.
@@ -167,6 +168,4 @@ class WpConnection extends MySqlConnection
 
         return $this->getWpdb()->prepare($wpQuery, $wpBindings);
     }
-
-
 }

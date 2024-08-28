@@ -7,15 +7,16 @@ use PDOException;
 
 class WpPdo extends PDO
 {
-    protected $wpConnection;
-    protected $in_transaction;
+    protected WpConnection $wpConnection;
+    protected bool $in_transaction;
 
-    public function __construct($wpConnection)
+    public function __construct(WpConnection $wpConnection)
     {
         $this->wpConnection = $wpConnection;
     }
 
-    public function beginTransaction () {
+    public function beginTransaction(): bool
+    {
         if($this->in_transaction){
             throw new PDOException("Failed to start transaction. Transaction is already started.");
         }
@@ -23,7 +24,8 @@ class WpPdo extends PDO
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
-    public function commit () {
+    public function commit(): bool
+    {
         if(!$this->in_transaction){
             throw new PDOException("There is no active transaction to commit");
         }
@@ -31,7 +33,8 @@ class WpPdo extends PDO
         return $this->wpConnection->unprepared('COMMIT');
     }
 
-    public function rollBack () {
+    public function rollBack(): bool
+    {
         if(!$this->in_transaction){
             throw new PDOException("There is no active transaction to rollback");
         }
@@ -39,25 +42,27 @@ class WpPdo extends PDO
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
-    public function inTransaction () {
+    public function inTransaction(): bool
+    {
         return $this->in_transaction;
     }
 
-    public function exec ($statement) {
+    public function exec($statement): false|int
+    {
         return $this->wpConnection->unprepared($statement);
     }
 
-    public function lastInsertId($name=null)
+    public function lastInsertId($name=null): false|string
     {
         return $this->wpConnection->getWpdb()->insert_id;
     }
 
-    public function errorCode()
+    public function errorCode(): null|string
     {
         return null;
     }
 
-    public function errorInfo()
+    public function errorInfo(): array
     {
         return [
             $this->wpConnection->getWpdb()->last_error
