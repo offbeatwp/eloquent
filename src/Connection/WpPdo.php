@@ -8,7 +8,7 @@ use PDOException;
 class WpPdo extends PDO
 {
     protected WpConnection $wpConnection;
-    protected bool $in_transaction;
+    protected bool $in_transaction = false;
 
     public function __construct(WpConnection $wpConnection)
     {
@@ -17,28 +17,31 @@ class WpPdo extends PDO
 
     public function beginTransaction(): bool
     {
-        if($this->in_transaction){
-            throw new PDOException("Failed to start transaction. Transaction is already started.");
+        if ($this->in_transaction) {
+            throw new PDOException('Failed to start transaction. Transaction is already started.');
         }
-        $this->in_transaction=true;
+
+        $this->in_transaction = true;
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
     public function commit(): bool
     {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to commit");
+        if (!$this->in_transaction) {
+            throw new PDOException('There is no active transaction to commit');
         }
-        $this->in_transaction=false;
+
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('COMMIT');
     }
 
     public function rollBack(): bool
     {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to rollback");
+        if (!$this->in_transaction) {
+            throw new PDOException('There is no active transaction to rollback');
         }
-        $this->in_transaction=false;
+
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
@@ -52,7 +55,7 @@ class WpPdo extends PDO
         return $this->wpConnection->unprepared($statement);
     }
 
-    public function lastInsertId($name=null): false|string
+    public function lastInsertId($name = null): false|string
     {
         return $this->wpConnection->getWpdb()->insert_id;
     }
