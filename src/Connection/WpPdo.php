@@ -8,7 +8,7 @@ use PDOException;
 class WpPdo extends PDO
 {
     protected WpConnection $wpConnection;
-    protected bool $in_transaction;
+    protected bool $inTransaction = false;
 
     public function __construct(WpConnection $wpConnection)
     {
@@ -17,34 +17,37 @@ class WpPdo extends PDO
 
     public function beginTransaction(): bool
     {
-        if($this->in_transaction){
-            throw new PDOException("Failed to start transaction. Transaction is already started.");
+        if ($this->inTransaction) {
+            throw new PDOException('Failed to start transaction. Transaction is already started.');
         }
-        $this->in_transaction=true;
+
+        $this->inTransaction = true;
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
     public function commit(): bool
     {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to commit");
+        if (!$this->inTransaction) {
+            throw new PDOException('There is no active transaction to commit');
         }
-        $this->in_transaction=false;
+
+        $this->inTransaction = false;
         return $this->wpConnection->unprepared('COMMIT');
     }
 
     public function rollBack(): bool
     {
-        if(!$this->in_transaction){
-            throw new PDOException("There is no active transaction to rollback");
+        if (!$this->inTransaction) {
+            throw new PDOException('There is no active transaction to rollback');
         }
-        $this->in_transaction=false;
+
+        $this->inTransaction = false;
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
     public function inTransaction(): bool
     {
-        return $this->in_transaction;
+        return $this->inTransaction;
     }
 
     public function exec($statement): false|int
@@ -52,7 +55,7 @@ class WpPdo extends PDO
         return $this->wpConnection->unprepared($statement);
     }
 
-    public function lastInsertId($name=null): false|string
+    public function lastInsertId($name = null): false|string
     {
         return $this->wpConnection->getWpdb()->insert_id;
     }
