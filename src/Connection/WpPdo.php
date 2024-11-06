@@ -8,7 +8,7 @@ use PDOException;
 class WpPdo extends PDO
 {
     protected WpConnection $wpConnection;
-    protected bool $inTransaction = false;
+    protected bool $in_transaction = false;
 
     public function __construct(WpConnection $wpConnection)
     {
@@ -17,37 +17,37 @@ class WpPdo extends PDO
 
     public function beginTransaction(): bool
     {
-        if ($this->inTransaction) {
+        if ($this->in_transaction) {
             throw new PDOException('Failed to start transaction. Transaction is already started.');
         }
 
-        $this->inTransaction = true;
+        $this->in_transaction = true;
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
     public function commit(): bool
     {
-        if (!$this->inTransaction) {
+        if (!$this->in_transaction) {
             throw new PDOException('There is no active transaction to commit');
         }
 
-        $this->inTransaction = false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('COMMIT');
     }
 
     public function rollBack(): bool
     {
-        if (!$this->inTransaction) {
+        if (!$this->in_transaction) {
             throw new PDOException('There is no active transaction to rollback');
         }
 
-        $this->inTransaction = false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
     public function inTransaction(): bool
     {
-        return $this->inTransaction;
+        return $this->in_transaction;
     }
 
     public function exec($statement): false|int
