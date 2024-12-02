@@ -53,12 +53,8 @@ class WpConnection extends MySqlConnection
      */
     public function cursor($query, $bindings = [], $useReadPdo = true): Generator
     {
-        $results = $this->select($query, $bindings, $useReadPdo);
-
-        if (!empty($results)) {
-            foreach ($results as $result) {
-                yield $result;
-            }
+        foreach ($this->select($query, $bindings, $useReadPdo) as $result) {
+            yield $result;
         }
     }
 
