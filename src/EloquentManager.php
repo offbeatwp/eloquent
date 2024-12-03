@@ -2,15 +2,14 @@
 
 namespace OffbeatWP\Eloquent;
 
-use BadMethodCallException;
 use Exception;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use OffbeatWP\Eloquent\Connection\WpConnection;
 
 class EloquentManager
 {
-    public bool $booted = false;
-    private ?WpConnection $connection = null;
+    public $booted = false;
+    private $connection;
 
     public function boot()
     {
@@ -20,7 +19,9 @@ class EloquentManager
         // utilizes the wpdb object to make the queries to the database/
         $capsule->addConnection([], 'wp');
         $this->connection = new WpConnection();
-        $capsule->getDatabaseManager()->extend('wp', fn() => $this->connection);
+        $capsule->getDatabaseManager()->extend('wp', function () {
+            return $this->connection;
+        });
 
         $capsule->getDatabaseManager()->setDefaultConnection('wp');
 
@@ -39,11 +40,11 @@ class EloquentManager
     {
         try {
             return self::callCapsuleMethod($method, $arguments);
-        } catch (Exception $e) {
+        } catch(Exception $e) {
 
         }
 
-        throw new BadMethodCallException('Call to undefined method ' . __CLASS__ . '::' . $method . '()');
+        trigger_error('Call to undefined method ' . __CLASS__ . '::' . $method . '()', E_USER_ERROR);
     }
 
     public static function __callStatic($method, $arguments)
@@ -54,7 +55,7 @@ class EloquentManager
 
         }
 
-        throw new BadMethodCallException('Call to undefined method ' . __CLASS__ . '::' . $method . '()');
+        trigger_error('Call to undefined method ' . __CLASS__ . '::' . $method . '()', E_USER_ERROR);
     }
 
     public static function callCapsuleMethod($method, $arguments)

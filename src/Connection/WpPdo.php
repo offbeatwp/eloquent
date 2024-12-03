@@ -5,10 +5,10 @@ namespace OffbeatWP\Eloquent\Connection;
 use PDO;
 use PDOException;
 
-final class WpPdo extends PDO
+class WpPdo extends PDO
 {
-    private readonly WpConnection $wpConnection;
-    private bool $inTransation = false;
+    protected WpConnection $wpConnection;
+    protected bool $in_transaction = false;
 
     public function __construct(WpConnection $wpConnection)
     {
@@ -17,37 +17,37 @@ final class WpPdo extends PDO
 
     public function beginTransaction(): bool
     {
-        if ($this->inTransation) {
+        if ($this->in_transaction) {
             throw new PDOException('Failed to start transaction. Transaction is already started.');
         }
 
-        $this->inTransation = true;
+        $this->in_transaction = true;
         return $this->wpConnection->unprepared('START TRANSACTION');
     }
 
     public function commit(): bool
     {
-        if (!$this->inTransation) {
+        if (!$this->in_transaction) {
             throw new PDOException('There is no active transaction to commit');
         }
 
-        $this->inTransation = false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('COMMIT');
     }
 
     public function rollBack(): bool
     {
-        if (!$this->inTransation) {
+        if (!$this->in_transaction) {
             throw new PDOException('There is no active transaction to rollback');
         }
 
-        $this->inTransation = false;
+        $this->in_transaction = false;
         return $this->wpConnection->unprepared('ROLLBACK');
     }
 
     public function inTransaction(): bool
     {
-        return $this->inTransation;
+        return $this->in_transaction;
     }
 
     public function exec($statement): false|int
