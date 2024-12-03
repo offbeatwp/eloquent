@@ -8,7 +8,7 @@ use wpdb;
 
 class WpConnection extends MySqlConnection
 {
-    private readonly wpdb $wpdb;
+    private wpdb $wpdb;
 
     public function __construct()
     {
@@ -16,10 +16,14 @@ class WpConnection extends MySqlConnection
 
         $this->wpdb = $wpdb;
 
-        parent::__construct(new WpPdo($this), DB_NAME ?? null, $wpdb->prefix);
+        parent::__construct(
+            new WpPdo($this),
+            DB_NAME ?? null,
+            $wpdb->prefix
+        );
     }
 
-    public function getWpdb(): wpdb
+    public function getWpdb()
     {
         return $this->wpdb;
     }
@@ -27,13 +31,14 @@ class WpConnection extends MySqlConnection
     /**
      * Run a select statement against the database.
      *
-     * @param string $query
-     * @param array $bindings
-     * @param bool $useReadPdo
+     * @param  string  $query
+     * @param  array  $bindings
+     * @param  bool  $useReadPdo
+     * @return array
      */
     public function select($query, $bindings = [], $useReadPdo = true): array
     {
-        return $this->run($query, $bindings, function ($query, $bindings) {
+        return $this->run($query, $bindings, function ($query, $bindings) use ($useReadPdo) {
             if ($this->pretending()) {
                 return [];
             }
@@ -47,22 +52,28 @@ class WpConnection extends MySqlConnection
     /**
      * Run a select statement against the database and returns a generator.
      *
-     * @param string $query
-     * @param array $bindings
-     * @param bool $useReadPdo
+     * @param  string  $query
+     * @param  array  $bindings
+     * @param  bool  $useReadPdo
+     * @return Generator
      */
     public function cursor($query, $bindings = [], $useReadPdo = true): Generator
     {
-        foreach ($this->select($query, $bindings, $useReadPdo) as $result) {
-            yield $result;
+        $results = $this->select($query, $bindings, $useReadPdo);
+
+        if(!empty($results)) {
+            foreach($results as $result) {
+                yield $result;
+            }
         }
     }
 
     /**
      * Execute an SQL statement and return the boolean result.
      *
-     * @param string $query
-     * @param array $bindings
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return bool
      */
     public function statement($query, $bindings = []): bool
     {
@@ -80,8 +91,9 @@ class WpConnection extends MySqlConnection
     /**
      * Run an SQL statement and get the number of rows affected.
      *
-     * @param string $query
-     * @param array $bindings
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return int
      */
     public function affectingStatement($query, $bindings = []): int
     {
@@ -97,7 +109,8 @@ class WpConnection extends MySqlConnection
     /**
      * Run a raw, unprepared query against the PDO connection.
      *
-     * @param string $query
+     * @param  string  $query
+     * @return bool
      */
     public function unprepared($query): bool
     {
@@ -106,26 +119,24 @@ class WpConnection extends MySqlConnection
                 return true;
             }
 
-            return (bool)$this->exec($query);
+            return (bool) $this->exec($query);
         });
     }
 
-    public function getResults(string $query): array
-    {
+    public function getResults($query) {
         return $this->getWpdb()->get_results($query);
     }
 
-    public function exec(string $query): bool|int
-    {
+    public function exec($query) {
         return $this->getWpdb()->query($query);
     }
 
     /**
      * Bind values to their parameters in the given query.
      */
-    public function applyBindings(string $query, array $bindings): string
+    public function applyBindings(string $query, array $bindings) : string
     {
-        if (!$bindings) {
+        if (empty($bindings)) {
             return $query;
         }
 
@@ -134,8 +145,8 @@ class WpConnection extends MySqlConnection
         $wpBindings = [];
 
         $bindingIndex = 0;
-        $wpQuery = preg_replace_callback('/\?|:[a-zA-Z0-9_-]+/', static function ($match) use ($bindings, &$bindingIndex, &$wpBindings) {
-            if (str_starts_with($match[0], ':')) {
+        $wpQuery = preg_replace_callback('/\?|:[a-zA-Z0-9_-]+/', function ($match) use ($bindings, &$bindingIndex, &$wpBindings) {
+            if (preg_match('/^:/', $match[0])) {
                 $bindingKey = str_replace(':', '', $match[0]);
             } else {
                 $bindingKey = $bindingIndex;
@@ -148,9 +159,7 @@ class WpConnection extends MySqlConnection
 
             if (is_int($value)) {
                 return '%d';
-            }
-
-            if (is_float($value)) {
+            } elseif (is_float($value)) {
                 return '%f';
             }
 

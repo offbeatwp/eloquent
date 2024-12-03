@@ -14,8 +14,7 @@
         }
     ],
     "require": {
-        "offbeatwp/framework": ">=3.5.5",
-        "illuminate/database": "^v10.48.25",
-        "php": ">=8.1"
+        "illuminate/database": "^8.55",
+        "php": ">=8.0"
     }
 }
